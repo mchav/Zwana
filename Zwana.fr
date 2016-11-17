@@ -1,0 +1,119 @@
+module Zwana where
+
+import frege.Prelude hiding(ListView)
+import frege.control.monad.trans.MonadTrans
+import fregefx.JavaFxType 
+import fregefx.JavaFxAll hiding (Rectangle)
+import fregefx.JavaFxUtils
+
+-- reimplement Rectangle to add listeners
+data Rectangle = mutable native javafx.scene.shape.Rectangle where
+    native new :: Double -> Double -> Double -> Double -> JFX Rectangle
+              | Double -> Double -> Paint -> JFX Rectangle
+              | Double -> Double -> JFX Rectangle
+              | () -> JFX Rectangle
+    native arcHeightProperty :: Rectangle -> JFX DoubleProperty
+    native arcWidthProperty :: Rectangle -> JFX DoubleProperty
+    native getArcHeight :: Rectangle -> JFX Double
+    native getArcWidth :: Rectangle -> JFX Double
+    -- native getClassCssMetaData "javafx.scene.shape.Rectangle.getClassCssMetaData" :: () -> IOMutable (List(CssMetaData Styleable Object))
+    -- native getCssMetaData :: Rectangle -> IOMutable (List (CssMetaData Styleable Object))
+    native getHeight :: Rectangle -> JFX Double
+    native getWidth :: Rectangle -> JFX Double
+    native getX :: Rectangle -> JFX Double
+    native getY :: Rectangle -> JFX Double
+    native heightProperty :: Rectangle -> JFX DoubleProperty
+    native setArcHeight :: Rectangle -> Double -> JFX ()
+    native setArcWidth :: Rectangle -> Double -> JFX ()
+    native setHeight :: Rectangle -> Double -> JFX ()
+    native setOnMouseClicked :: Rectangle -> EventHandler MouseEvent -> JFX ()
+    native setWidth :: Rectangle -> Double -> JFX ()
+    native setX :: Rectangle -> Double -> JFX ()
+    native setY :: Rectangle -> Double -> JFX ()
+    native toString :: Rectangle -> JFX String
+    native widthProperty :: Rectangle -> JFX DoubleProperty
+    native xProperty :: Rectangle -> JFX DoubleProperty
+    native yProperty :: Rectangle -> JFX DoubleProperty
+
+data MouseEvent = native javafx.scene.input.MouseEvent
+
+data MidiSystem = native javax.sound.midi.MidiSystem where 
+    native getSequencer "javax.sound.midi.MidiSystem.getSequencer" :: () -> STMutable s Sequencer throws MidiUnavailableException
+
+data Sequence = native javax.sound.midi.Sequence where
+    native new :: Float -> Int -> STMutable s Sequence throws InvalidMidiDataException
+    native createTrack :: Mutable s Sequence -> STMutable s Track
+    pure native ppq "javax.sound.midi.Sequence.PPQ" :: Float
+
+data InvalidMidiDataException = native javax.sound.midi.InvalidMidiDataException
+derive Exceptional InvalidMidiDataException
+
+data MidiEvent = native javax.sound.midi.MidiEvent where
+    native new :: Mutable s ShortMessage -> Int -> STMutable s MidiEvent
+
+data ShortMessage = native javax.sound.midi.ShortMessage where
+    native new :: Int -> Int -> Int -> Int -> STMutable s ShortMessage throws InvalidMidiDataException
+
+
+data Track = native javax.sound.midi.Track where
+    native add :: Mutable s Track -> Mutable s MidiEvent -> ST s Bool
+
+
+data Sequencer = native javax.sound.midi.Sequencer where
+    native open :: MutableIO Sequencer -> IO () throws MidiUnavailableException
+    native close :: MutableIO Sequencer -> IO ()
+    native start :: MutableIO Sequencer -> IO ()
+    native setSequence :: MutableIO Sequencer -> MutableIO Sequence -> IO () throws InvalidMidiDataException
+
+data MidiUnavailableException = native javax.sound.midi.MidiUnavailableException
+derive Exceptional MidiUnavailableException
+
+instance CastTarget Rectangle where
+    native downcast "(javafx.scene.shape.Rectangle)" :: Node -> JFX (ClassCastException | Rectangle )
+
+type Note = Int
+type Instrument = Int
+
+playNote :: Instrument -> Note -> IO ()
+playNote instrument note = do
+    sequencer <- MidiSystem.getSequencer ()
+    sequencer.open
+    sequence <- Sequence.new Sequence.ppq 4
+    track <- sequence.createTrack
+
+    changeInstrument <- ShortMessage.new 192 1 instrument 0
+    changeInstrument' <- MidiEvent.new changeInstrument 1
+    track.add changeInstrument'
+
+    noteOn <- ShortMessage.new 144 1 note 100
+    noteOn' <- MidiEvent.new noteOn 1
+    track.add noteOn'
+
+    noteOff <- ShortMessage.new 128 1 note 100
+    noteOff' <- MidiEvent.new noteOff 16
+    track.add noteOff'
+
+    sequencer.setSequence sequence
+    sequencer.start
+
+main :: IO ()
+main = do
+    FregeFX.launch $ withStage buildUI
+
+notes :: [String]
+notes = ["#keyC","#keyCSharp","#keyD","#keyDSharp","#keyE","#keyF","#keyFSharp","#keyG","#keyGSharp","#keyA","#keyASharp","#keyB", "#keyCUp"]
+
+buildUI :: Family a => a -> Stage -> JFX a
+buildUI root stage = do
+    stage.setTitle "Zwana"
+    content <- FregeFX.fxml "Zwana" "/Zwana.fxml"
+    scene <- Scene.new content 490.0 318.0
+    let keys = zip [1..] (map (\x -> lookupNode scene x :: JFX Rectangle) notes)
+    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMouseClicked (onAction (\ _ -> (playNote 10 (36 + k)) `thenDo` handler))))
+    stage.setScene scene
+    stage.setResizable False
+    Stage.show stage
+    return root
+
+handler :: () -> JFX ()
+handler f = return ()
