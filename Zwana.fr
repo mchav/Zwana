@@ -1,7 +1,6 @@
 module Zwana where
 
 import frege.Prelude hiding(ListView)
-import frege.control.monad.trans.MonadTrans
 import fregefx.JavaFxType 
 import fregefx.JavaFxAll hiding (Rectangle)
 import fregefx.JavaFxUtils
@@ -16,8 +15,6 @@ data Rectangle = mutable native javafx.scene.shape.Rectangle where
     native arcWidthProperty :: Rectangle -> JFX DoubleProperty
     native getArcHeight :: Rectangle -> JFX Double
     native getArcWidth :: Rectangle -> JFX Double
-    -- native getClassCssMetaData "javafx.scene.shape.Rectangle.getClassCssMetaData" :: () -> IOMutable (List(CssMetaData Styleable Object))
-    -- native getCssMetaData :: Rectangle -> IOMutable (List (CssMetaData Styleable Object))
     native getHeight :: Rectangle -> JFX Double
     native getWidth :: Rectangle -> JFX Double
     native getX :: Rectangle -> JFX Double
