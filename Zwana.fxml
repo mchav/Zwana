@@ -25,7 +25,7 @@
       <Rectangle id="keyFSharp" fx:id="keyFSharp" arcHeight="5.0" arcWidth="5.0" height="121.0" layoutX="238.0" layoutY="104.0" stroke="BLACK" strokeType="INSIDE" width="29.0" />
       <Rectangle id="keyGSharp" fx:id="keyGSharp" arcHeight="5.0" arcWidth="5.0" height="121.0" layoutX="290.0" layoutY="104.0" stroke="BLACK" strokeType="INSIDE" width="29.0" />
       <Rectangle id="keyASharp" fx:id="keyASharp" arcHeight="5.0" arcWidth="5.0" height="121.0" layoutX="342.0" layoutY="104.0" stroke="BLACK" strokeType="INSIDE" width="29.0" />
-      <Slider id="sliderOctave" fx:id="sliderOctave" blockIncrement="1.0" layoutX="114.0" layoutY="48.0" max="9.0" min="1.0" value="2.0" />
+      <Slider id="sliderOctave" fx:id="sliderOctave" blockIncrement="1.0" layoutX="114.0" layoutY="48.0" max="9.0" min="2.0" value="4.0" />
       <Label layoutX="16.0" layoutY="40.0" prefHeight="34.0" prefWidth="80.0" text="Octave" textFill="#544141">
          <font>
             <Font name="LKLUG" size="20.0" />

@@ -1,7 +1,7 @@
 module Zwana where
 
-import fregefx.JavaFxType 
-import fregefx.JavaFxAll hiding (Rectangle)
+import fregefx.JavaFxType
+import fregefx.JavaFxAll hiding (ListView, Rectangle)
 import fregefx.JavaFxUtils
 
 import Prelude.Math
@@ -33,14 +33,10 @@ data Slider = mutable native javafx.scene.control.Slider where
 
 -- java sound classes
 data MidiSystem = native javax.sound.midi.MidiSystem where 
-    native getSequencer "javax.sound.midi.MidiSystem.getSequencer" :: () -> STMutable s Sequencer throws MidiUnavailableException
     native getSynthesizer "javax.sound.midi.MidiSystem.getSynthesizer" :: () -> STMutable s Synthesizer throws MidiUnavailableException
 
 data InvalidMidiDataException = native javax.sound.midi.InvalidMidiDataException
 derive Exceptional InvalidMidiDataException
-
-data MidiEvent = native javax.sound.midi.MidiEvent where
-    native new :: Mutable s ShortMessage -> Int -> STMutable s MidiEvent
 
 data Instrument = pure native javax.sound.midi.Instrument
 derive ArrayElement Instrument
