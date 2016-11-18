@@ -7,35 +7,32 @@ import fregefx.JavaFxUtils
 
 import Prelude.Math
 
+-- fregeFX classes
+
 -- reimplement Rectangle to add listeners
 data Rectangle = mutable native javafx.scene.shape.Rectangle where
-    native new :: Double -> Double -> Double -> Double -> JFX Rectangle
-              | Double -> Double -> Paint -> JFX Rectangle
-              | Double -> Double -> JFX Rectangle
-              | () -> JFX Rectangle
-    native arcHeightProperty :: Rectangle -> JFX DoubleProperty
-    native arcWidthProperty :: Rectangle -> JFX DoubleProperty
-    native getArcHeight :: Rectangle -> JFX Double
-    native getArcWidth :: Rectangle -> JFX Double
-    native getHeight :: Rectangle -> JFX Double
-    native getWidth :: Rectangle -> JFX Double
-    native getX :: Rectangle -> JFX Double
-    native getY :: Rectangle -> JFX Double
-    native heightProperty :: Rectangle -> JFX DoubleProperty
-    native setArcHeight :: Rectangle -> Double -> JFX ()
-    native setArcWidth :: Rectangle -> Double -> JFX ()
-    native setHeight :: Rectangle -> Double -> JFX ()
     native setOnMouseClicked :: Rectangle -> EventHandler MouseEvent -> JFX ()
-    native setWidth :: Rectangle -> Double -> JFX ()
-    native setX :: Rectangle -> Double -> JFX ()
-    native setY :: Rectangle -> Double -> JFX ()
-    native toString :: Rectangle -> JFX String
-    native widthProperty :: Rectangle -> JFX DoubleProperty
-    native xProperty :: Rectangle -> JFX DoubleProperty
-    native yProperty :: Rectangle -> JFX DoubleProperty
 
 data MouseEvent = native javafx.scene.input.MouseEvent
 
+instance CastTarget Rectangle where
+    native downcast "(javafx.scene.shape.Rectangle)" :: Node -> JFX (ClassCastException | Rectangle )
+
+instance CastTarget TextField where
+    native downcast "(javafx.scene.control.TextField)" :: Node -> JFX (ClassCastException | TextField )
+
+instance CastTarget Slider where
+    native downcast "(javafx.scene.control.Slider)" :: Node -> JFX (ClassCastException | Slider )
+
+data TextField = mutable native javafx.scene.control.TextField where
+    native getText :: TextField -> IO String
+    native setOnAction :: TextField -> EventHandler ActionEvent -> JFX ()
+
+data Slider = mutable native javafx.scene.control.Slider where
+    native getValue :: Slider -> IO Double
+    native increment :: Slider -> JFX ()
+
+-- java sound classes
 data MidiSystem = native javax.sound.midi.MidiSystem where 
     native getSequencer "javax.sound.midi.MidiSystem.getSequencer" :: () -> STMutable s Sequencer throws MidiUnavailableException
 
@@ -56,6 +53,7 @@ data ShortMessage = native javax.sound.midi.ShortMessage where
 
 data Track = native javax.sound.midi.Track where
     native add :: Mutable s Track -> Mutable s MidiEvent -> ST s Bool
+    native remove :: Mutable s Track -> Mutable s MidiEvent -> ST s Bool
 
 
 data Sequencer = native javax.sound.midi.Sequencer where
@@ -67,69 +65,7 @@ data Sequencer = native javax.sound.midi.Sequencer where
 data MidiUnavailableException = native javax.sound.midi.MidiUnavailableException
 derive Exceptional MidiUnavailableException
 
-instance CastTarget Rectangle where
-    native downcast "(javafx.scene.shape.Rectangle)" :: Node -> JFX (ClassCastException | Rectangle )
-
-instance CastTarget TextField where
-    native downcast "(javafx.scene.control.TextField)" :: Node -> JFX (ClassCastException | TextField )
-
-instance CastTarget Slider where
-    native downcast "(javafx.scene.control.Slider)" :: Node -> JFX (ClassCastException | Slider )
-
-type Note = Int
-type Instrument = Int
-
-data TextField = mutable native javafx.scene.control.TextField where
-    pure native default_pref_column_count "javafx.scene.control.TextField.DEFAULT_PREF_COLUMN_COUNT" :: Int
-    native new :: () -> JFX TextField
-              | String -> JFX TextField
-    native alignmentProperty :: TextField -> JFX (ObjectProperty Pos)
-    native getAlignment :: TextField -> JFX Pos
-    native getCharacters :: TextField -> JFX CharSequence
-    native getPrefColumnCount :: TextField -> JFX Int
-    native getText :: TextField -> IO String
-    native prefColumnCountProperty :: TextField -> JFX IntegerProperty
-    native setAlignment :: TextField -> Pos -> JFX ()
-    native setOnAction :: TextField -> EventHandler ActionEvent -> JFX ()
-    native setPrefColumnCount :: TextField -> Int -> JFX ()
-
-data Slider = mutable native javafx.scene.control.Slider where
-    native new :: () -> JFX Slider
-                 | Double -> Double -> Double -> JFX Slider
-    native adjustValue :: Slider -> Double -> JFX ()
-    native blockIncrementProperty :: Slider -> JFX DoubleProperty
-    native decrement :: Slider -> JFX ()
-    native getBlockIncrement :: Slider -> JFX Double
-    native getMajorTickUnit :: Slider -> JFX Double
-    native getMax :: Slider -> JFX Double
-    native getMin :: Slider -> JFX Double
-    native getMinorTickCount :: Slider -> JFX Int
-    native getOrientation :: Slider -> JFX Orientation
-    native getValue :: Slider -> IO Double
-    native increment :: Slider -> JFX ()
-    native isShowTickLabels :: Slider -> JFX Bool
-    native isShowTickMarks :: Slider -> JFX Bool
-    native isSnapToTicks :: Slider -> JFX Bool
-    native isValueChanging :: Slider -> JFX Bool
-    native majorTickUnitProperty :: Slider -> JFX DoubleProperty
-    native maxProperty :: Slider -> JFX DoubleProperty
-    native minProperty :: Slider -> JFX DoubleProperty
-    native setBlockIncrement :: Slider -> Double -> JFX ()
-    native setMajorTickUnit :: Slider -> Double -> JFX ()
-    native setMax :: Slider -> Double -> JFX ()
-    native setMin :: Slider -> Double -> JFX ()
-    native setMinorTickCount :: Slider -> Int -> JFX ()
-    native setOrientation :: Slider -> Orientation -> JFX ()
-    native setShowTickLabels :: Slider -> Bool -> JFX ()
-    native setShowTickMarks :: Slider -> Bool -> JFX ()
-    native setSnapToTicks :: Slider -> Bool -> JFX ()
-    native setValue :: Slider -> Double -> JFX ()
-    native setValueChanging :: Slider -> Bool -> JFX ()
-    native showTickLabelsProperty :: Slider -> JFX BooleanProperty
-    native showTickMarksProperty :: Slider -> JFX BooleanProperty
-    native snapToTicksProperty :: Slider -> JFX BooleanProperty
-    native valueChangingProperty :: Slider -> JFX BooleanProperty
-    native valueProperty :: Slider -> JFX DoubleProperty
+-- utility functions
 
 toInt :: String -> Int
 toInt x = either (const 0) id x.int
@@ -138,12 +74,69 @@ truncate :: Double -> Int
 truncate n = let n' = round n
              in if ( n'.double > n ) then (n' - 1).int else (n').int
 
+-- main and GUI
+
+main :: IO ()
+main = do
+    FregeFX.launch $ withStage buildUI
+
+
+buildUI :: Family a => a -> Stage -> JFX a
+buildUI root stage = do
+    stage.setTitle "Zwana"
+    content <- FregeFX.fxml "Zwana" "/Zwana.fxml"
+    scene <- Scene.new content 490.0 318.0
+    instrument <- lookupNode scene "#inputInstrument" :: JFX TextField
+    octave <- lookupNode scene "#sliderOctave" :: JFX Slider
+    onKeyPressed scene instrument octave
+    let keys = zip [0..] (map (\x -> lookupNode scene x :: JFX Rectangle) notes)
+    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMouseClicked (onAction (\ _ -> (playNote instrument octave k) `thenDo` handler))))
+    stage.setScene scene
+    stage.setResizable False
+    Stage.show stage
+    return root
+
+--  dummy functio to take an action from the IO monad to the JFX monad
+handler :: () -> JFX ()
+handler f = return ()
+
+onKeyPressed :: Scene -> TextField -> Slider -> JFX ()
+onKeyPressed scene instrument octave = do
+    scene.setOnKeyPressed (onAction (\k -> k.getCode >>= \keyCode -> KeyCode.getName keyCode >>= \ keyName -> (playNote instrument octave (fromKey keyName)) `thenDo` handler))
+
+handleKeyEvent :: KeyEvent -> JFX ()
+handleKeyEvent k = do
+    keyCode <- k.getCode
+    keyName <- KeyCode.getName keyCode
+    let note = fromKey keyName
+    (println note) `thenDo` handler
+
+fromKey :: String -> Int
+fromKey s = case s of
+    "Z"     -> 0
+    "S"     -> 1
+    "X"     -> 2
+    "D"     -> 3
+    "C"     -> 4
+    "V"     -> 5
+    "G"     -> 6
+    "B"     -> 7
+    "H"     -> 8
+    "N"     -> 9
+    "J"     -> 10
+    "M"     -> 11
+    "Comma" -> 12
+    _       -> 0
+
+-- sound functions
+
+type Note = Int
+
 playNote :: TextField -> Slider -> Note -> IO ()
 playNote i o n = do
     instrument <- liftM toInt i.getText
     octave <- liftM truncate o.getValue
     let note = octave * 12 + n
-    println note
     sequencer <- MidiSystem.getSequencer ()
     sequencer.open
     sequence <- Sequence.new Sequence.ppq 4
@@ -163,27 +156,7 @@ playNote i o n = do
 
     sequencer.setSequence sequence
     sequencer.start
-
-main :: IO ()
-main = do
-    FregeFX.launch $ withStage buildUI
+    return ()
 
 notes :: [String]
 notes = ["#keyC","#keyCSharp","#keyD","#keyDSharp","#keyE","#keyF","#keyFSharp","#keyG","#keyGSharp","#keyA","#keyASharp","#keyB", "#keyCUp"]
-
-buildUI :: Family a => a -> Stage -> JFX a
-buildUI root stage = do
-    stage.setTitle "Zwana"
-    content <- FregeFX.fxml "Zwana" "/Zwana.fxml"
-    scene <- Scene.new content 490.0 318.0
-    instrument <- lookupNode scene "#inputInstrument" :: JFX TextField
-    octave <- lookupNode scene "#sliderOctave" :: JFX Slider
-    let keys = zip [0..] (map (\x -> lookupNode scene x :: JFX Rectangle) notes)
-    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMouseClicked (onAction (\ _ -> (playNote instrument octave k) `thenDo` handler))))
-    stage.setScene scene
-    stage.setResizable False
-    Stage.show stage
-    return root
-
-handler :: () -> JFX ()
-handler f = return ()
