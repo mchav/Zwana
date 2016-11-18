@@ -25,8 +25,8 @@
       <Rectangle id="keyFSharp" fx:id="keyFSharp" arcHeight="5.0" arcWidth="5.0" height="121.0" layoutX="238.0" layoutY="104.0" stroke="BLACK" strokeType="INSIDE" width="29.0" />
       <Rectangle id="keyGSharp" fx:id="keyGSharp" arcHeight="5.0" arcWidth="5.0" height="121.0" layoutX="290.0" layoutY="104.0" stroke="BLACK" strokeType="INSIDE" width="29.0" />
       <Rectangle id="keyASharp" fx:id="keyASharp" arcHeight="5.0" arcWidth="5.0" height="121.0" layoutX="342.0" layoutY="104.0" stroke="BLACK" strokeType="INSIDE" width="29.0" />
-      <Slider id="octave" fx:id="sliderOctave" blockIncrement="1.0" layoutX="130.0" layoutY="50.0" max="8.0" min="1.0" value="1.0" />
-      <Label layoutX="30.0" layoutY="41.0" prefHeight="34.0" prefWidth="80.0" text="Octave" textFill="#544141">
+      <Slider id="sliderOctave" fx:id="sliderOctave" blockIncrement="1.0" layoutX="114.0" layoutY="48.0" max="9.0" min="1.0" value="2.0" />
+      <Label layoutX="16.0" layoutY="40.0" prefHeight="34.0" prefWidth="80.0" text="Octave" textFill="#544141">
          <font>
             <Font name="LKLUG" size="20.0" />
          </font>
@@ -50,8 +50,8 @@
           </Menu>
         </menus>
       </MenuBar>
-      <TextField id="instrument" fx:id="inputInstrument" layoutX="420.0" layoutY="45.0" prefHeight="26.0" prefWidth="29.0" text="1" />
-      <Label layoutX="291.0" layoutY="41.0" prefHeight="34.0" prefWidth="120.0" text="Instrument" textFill="#544141">
+      <TextField id="inputInstrument" fx:id="inputInstrument" layoutX="407.0" layoutY="45.0" prefHeight="26.0" prefWidth="52.0" text="1" />
+      <Label layoutX="277.0" layoutY="39.0" prefHeight="34.0" prefWidth="120.0" text="Instrument" textFill="#544141">
          <font>
             <Font name="LKLUG" size="20.0" />
          </font>
