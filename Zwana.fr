@@ -4,7 +4,11 @@ import fregefx.JavaFxType
 import fregefx.JavaFxAll hiding (ListView, Rectangle)
 import fregefx.JavaFxUtils
 
+import Data.List
 import Prelude.Math
+
+
+type Note = Int
 
 -- fregeFX classes
 
@@ -87,55 +91,48 @@ buildUI root stage = do
     scene <- Scene.new content 490.0 318.0
     i <- lookupNode scene "#inputInstrument" :: JFX TextField
     o <- lookupNode scene "#sliderOctave" :: JFX Slider
-    onKeyPressed scene i o
+    onKeyPressed scene i o 
     let keys = zip [0..] (map (\x -> lookupNode scene x :: JFX Rectangle) notes)
-    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMousePressed (onAction (\ _ -> (playNote (instrument i) (octave o) k) `thenDo` handler) ) ) )
+    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMousePressed (onAction (\ _ -> (processNote i o k) `thenDo` noAction) ) ) )
     stage.setScene scene
     stage.setResizable False
     Stage.show stage
     return root
 
 --  dummy functio to take an action from the IO monad to the JFX monad
-handler :: () -> JFX ()
-handler f = return ()
+noAction :: () -> JFX ()
+noAction f = return ()
 
 onKeyPressed :: Scene -> TextField -> Slider -> JFX ()
 onKeyPressed scene i o = do
-    scene.setOnKeyPressed (onAction (\k -> k.getCode >>= \keyCode -> KeyCode.getName keyCode >>= \ keyName -> (playNote (instrument i) (octave o) (fromKey keyName)) `thenDo` handler))
+    scene.setOnKeyPressed (onAction go) 
+   where
+    go k = do
+        keyName <- getKeyName k
+        case (fromKey keyName) of
+            (Just key) -> (processNote i o key) `thenDo` noAction
+            Nothing    -> return () 
 
-fromKey :: String -> Int
-fromKey s = case s of
-    "Z"     -> 0
-    "S"     -> 1
-    "X"     -> 2
-    "D"     -> 3
-    "C"     -> 4
-    "V"     -> 5
-    "G"     -> 6
-    "B"     -> 7
-    "H"     -> 8
-    "N"     -> 9
-    "J"     -> 10
-    "M"     -> 11
-    "Comma" -> 12
-    "Q"     -> 12
-    "2"     -> 13
-    "W"     -> 14
-    "3"     -> 15
-    "E"     -> 16
-    "R"     -> 17
-    "5"     -> 18
-    "T"     -> 19
-    "6"     -> 20
-    "Y"     -> 21
-    "7"     -> 22
-    "U"     -> 23
-    "I"     -> 24
-    _       -> 0
+processNote :: TextField -> Slider -> Note -> IO ()
+processNote i o n = do
+    instr <- instrument i
+    oct <- octave o
+    playNote instr oct n
+
+getKeyName :: KeyEvent -> JFX String
+getKeyName k = do
+    keyCode <- k.getCode
+    keyName <- KeyCode.getName keyCode
+    return keyName
+
+keyboardNotes :: [String]
+keyboardNotes = ["Z", "S", "X", "D", "C", "V", "G", "B", "H", "N", "J", "M", "Comma", "Q", "2", "W", "3", "E", "R", "5", "T", "6", "Y", "7", "U", "I"]
+
+fromKey :: String -> Maybe Note
+fromKey s = lookup s (zip keyboardNotes [0..])
+
 
 -- sound functions
-
-type Note = Int
 
 instrument :: TextField -> IO Int
 instrument i = liftM toInt i.getText
@@ -143,23 +140,19 @@ instrument i = liftM toInt i.getText
 octave :: Slider -> IO Int
 octave o = liftM truncate o.getValue
 
-playNote :: IO Int -> IO Int -> Note -> IO ()
+playNote :: Int -> Int -> Note -> IO ()
 playNote i o n = do
-    i' <- i
-    o' <- o
-    let note = o' * 12 + n
+    let note = o * 12 + n
     synthesizer <- MidiSystem.getSynthesizer ()
     synthesizer.open
     instruments <- synthesizer.getAvailableInstruments
     channels <- synthesizer.getChannels
     firstChannel <- getElemAt channels 0
-    instr <- getElemAt instruments i'
-    str <- instr.toString
-    println str
+    instr <- getElemAt instruments i
     patch <- instr.getPatch
     firstChannel.programChange patch.getProgram
     loaded <- synthesizer.loadInstrument instr
-    firstChannel.noteOn note 20
+    firstChannel.noteOn note 100
     Thread.sleep 1000
     firstChannel.noteOff note
 
