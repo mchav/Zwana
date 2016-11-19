@@ -11,6 +11,8 @@ import Prelude.Math
 -- reimplement Rectangle to add listeners
 data Rectangle = mutable native javafx.scene.shape.Rectangle where
     native setOnMouseClicked :: Rectangle -> EventHandler MouseEvent -> JFX ()
+    native setOnMousePressed :: Rectangle -> EventHandler MouseEvent -> JFX ()
+    native setOnMouseReleased :: Rectangle -> EventHandler MouseEvent -> JFX ()
 
 data MouseEvent = native javafx.scene.input.MouseEvent
 
@@ -38,22 +40,25 @@ data MidiSystem = native javax.sound.midi.MidiSystem where
 data InvalidMidiDataException = native javax.sound.midi.InvalidMidiDataException
 derive Exceptional InvalidMidiDataException
 
-data Instrument = pure native javax.sound.midi.Instrument
-derive ArrayElement Instrument
+data Patch = pure native javax.sound.midi.Patch where
+    pure native getProgram :: Patch -> Int
 
-data Soundbank = native javax.sound.midi.Soundbank where
-    native getInstruments  :: Mutable s Soundbank -> STMutable s (JArray Instrument)
+data Instrument = pure native javax.sound.midi.Instrument where
+    native toString :: Instrument -> ST s String
+    native getPatch :: Instrument -> ST s Patch
+derive ArrayElement Instrument
 
 data MidiChannel = pure native javax.sound.midi.MidiChannel where
     native noteOn :: MidiChannel -> Int -> Int -> IO ()
     native noteOff :: MidiChannel -> Int -> IO ()
+    native programChange :: MidiChannel -> Int -> IO ()
 
 derive ArrayElement MidiChannel
 
 data Synthesizer = native javax.sound.midi.Synthesizer where
     native open :: MutableIO Synthesizer -> IO () throws MidiUnavailableException
     native getChannels :: Mutable s Synthesizer -> STMutable s (JArray MidiChannel)
-    native getDefaultSoundbank :: Mutable s Synthesizer -> STMutable s Soundbank
+    native getAvailableInstruments :: Mutable s Synthesizer -> STMutable s (JArray Instrument)
     native loadInstrument :: Mutable s Synthesizer -> Instrument -> ST s Bool
 
 data MidiUnavailableException = native javax.sound.midi.MidiUnavailableException
@@ -84,7 +89,7 @@ buildUI root stage = do
     o <- lookupNode scene "#sliderOctave" :: JFX Slider
     onKeyPressed scene i o
     let keys = zip [0..] (map (\x -> lookupNode scene x :: JFX Rectangle) notes)
-    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMouseClicked (onAction (\ _ -> (playNote (instrument i) (octave o) k) `thenDo` handler) ) ) )
+    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMousePressed (onAction (\ _ -> (playNote (instrument i) (octave o) k) `thenDo` handler) ) ) )
     stage.setScene scene
     stage.setResizable False
     Stage.show stage
@@ -125,7 +130,7 @@ fromKey s = case s of
     "Y"     -> 21
     "7"     -> 22
     "U"     -> 23
-    "I"     -> 14
+    "I"     -> 24
     _       -> 0
 
 -- sound functions
@@ -145,16 +150,18 @@ playNote i o n = do
     let note = o' * 12 + n
     synthesizer <- MidiSystem.getSynthesizer ()
     synthesizer.open
-    soundbank <- synthesizer.getDefaultSoundbank
-    instruments <- soundbank.getInstruments
+    instruments <- synthesizer.getAvailableInstruments
     channels <- synthesizer.getChannels
     firstChannel <- getElemAt channels 0
     instr <- getElemAt instruments i'
-    _ <- synthesizer.loadInstrument instr
-    firstChannel.noteOn note 100
+    str <- instr.toString
+    println str
+    patch <- instr.getPatch
+    firstChannel.programChange patch.getProgram
+    loaded <- synthesizer.loadInstrument instr
+    firstChannel.noteOn note 20
     Thread.sleep 1000
     firstChannel.noteOff note
-    return ()
 
 notes :: [String]
 notes = ["#keyC","#keyCSharp","#keyD","#keyDSharp","#keyE","#keyF","#keyFSharp","#keyG","#keyGSharp","#keyA","#keyASharp","#keyB", "#keyCUp"]
