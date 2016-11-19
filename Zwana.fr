@@ -88,36 +88,38 @@ buildUI :: Family a => a -> Stage -> JFX a
 buildUI root stage = do
     stage.setTitle "Zwana"
     content <- FregeFX.fxml "Zwana" "/Zwana.fxml"
-    scene <- Scene.new content 490.0 318.0
+    scene <- Scene.new content 571.0 318.0
     i <- lookupNode scene "#inputInstrument" :: JFX TextField
     o <- lookupNode scene "#sliderOctave" :: JFX Slider
-    onKeyPressed scene i o 
+    v <- lookupNode scene "#sliderVolume" :: JFX Slider
+    onKeyPressed scene i o v
     let keys = zip [0..] (map (\x -> lookupNode scene x :: JFX Rectangle) notes)
-    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMousePressed (onAction (\ _ -> (processNote i o k) `thenDo` noAction) ) ) )
+    forM_ keys (\ (k, note) -> note >>= (\n -> n.setOnMousePressed (onAction (\ _ -> (processNote i o v k) `thenDo` noAction) ) ) )
     stage.setScene scene
     stage.setResizable False
     Stage.show stage
     return root
 
---  dummy functio to take an action from the IO monad to the JFX monad
+--  dummy function to take an action from the IO monad to the JFX monad
 noAction :: () -> JFX ()
 noAction f = return ()
 
-onKeyPressed :: Scene -> TextField -> Slider -> JFX ()
-onKeyPressed scene i o = do
+onKeyPressed :: Scene -> TextField -> Slider -> Slider -> JFX ()
+onKeyPressed scene i o v = do
     scene.setOnKeyPressed (onAction go) 
    where
     go k = do
         keyName <- getKeyName k
         case (fromKey keyName) of
-            (Just key) -> (processNote i o key) `thenDo` noAction
+            (Just key) -> (processNote i o v key) `thenDo` noAction
             Nothing    -> return () 
 
-processNote :: TextField -> Slider -> Note -> IO ()
-processNote i o n = do
+processNote :: TextField -> Slider -> Slider -> Note -> IO ()
+processNote i o v n = do
     instr <- instrument i
-    oct <- octave o
-    playNote instr oct n
+    oct <- getSilderValue o
+    vol <- getSilderValue v
+    playNote instr oct vol n
 
 getKeyName :: KeyEvent -> JFX String
 getKeyName k = do
@@ -131,17 +133,15 @@ keyboardNotes = ["Z", "S", "X", "D", "C", "V", "G", "B", "H", "N", "J", "M", "Co
 fromKey :: String -> Maybe Note
 fromKey s = lookup s (zip keyboardNotes [0..])
 
-
 -- sound functions
-
 instrument :: TextField -> IO Int
 instrument i = liftM toInt i.getText
 
-octave :: Slider -> IO Int
-octave o = liftM truncate o.getValue
+getSilderValue :: Slider -> IO Int
+getSilderValue o = liftM truncate o.getValue
 
-playNote :: Int -> Int -> Note -> IO ()
-playNote i o n = do
+playNote :: Int -> Int -> Int-> Note -> IO ()
+playNote i o v n = do
     let note = o * 12 + n
     synthesizer <- MidiSystem.getSynthesizer ()
     synthesizer.open
@@ -152,7 +152,7 @@ playNote i o n = do
     patch <- instr.getPatch
     firstChannel.programChange patch.getProgram
     loaded <- synthesizer.loadInstrument instr
-    firstChannel.noteOn note 100
+    firstChannel.noteOn note v
     Thread.sleep 1000
     firstChannel.noteOff note
 

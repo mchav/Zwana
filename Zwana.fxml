@@ -10,7 +10,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="318.0" prefWidth="490.0" style="-fx-background-color: &quot;grey&quot;;" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="318.0" prefWidth="570.0" style="-fx-background-color: &quot;grey&quot;;" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Rectangle id="keyC" fx:id="keyC" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="200.0" layoutX="44.0" layoutY="104.0" stroke="BLACK" strokeType="INSIDE" width="52.0" />
       <Rectangle id="keyD" fx:id="keyD" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="200.0" layoutX="96.0" layoutY="104.0" stroke="BLACK" strokeType="INSIDE" width="52.0" />
@@ -31,7 +31,7 @@
             <Font name="LKLUG" size="20.0" />
          </font>
       </Label>
-      <MenuBar prefHeight="29.0" prefWidth="490.0">
+      <MenuBar prefHeight="29.0" prefWidth="570.0">
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
@@ -56,5 +56,8 @@
             <Font name="LKLUG" size="20.0" />
          </font>
       </Label>
+      <Slider id="sliderVolume" fx:id="sliderVolume" layoutX="493.0" layoutY="105.0" orientation="VERTICAL" prefHeight="200.0" prefWidth="15.0" value="100.0" />
+      <Label layoutX="517.0" layoutY="105.0" text="100" />
+      <Label layoutX="522.0" layoutY="283.0" text="0" />
    </children>
 </Pane>
